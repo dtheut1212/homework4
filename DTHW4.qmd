@@ -1,0 +1,137 @@
+---
+title: D.Theut.HW4
+author: "Drew Theut"
+date: "2024-04-04"
+format: 
+  html:
+    theme: cosmo
+    toc: true
+    toc_depth: 2
+---
+
+install.packages("RedditExtractoR")
+
+install.packages("tm")
+
+install.packages("wordcloud")
+
+install.packages("ggplot2")
+
+library(RedditExtractoR)
+library(tm)
+library(wordcloud)
+library(ggplot2)
+
+# Fetch thread URLs; adjust the function call as necessary based on actual capabilities
+thread_urls <- c(
+  "https://www.reddit.com/r/CFB/comments/1bvvnpr/2025_4_qb_matt_zollers_commits_to_missouri/",
+  "https://www.reddit.com/r/CFB/comments/1bvq9j0/sam_khan_jr_how_an_80team_8division_college/",
+  "https://www.reddit.com/r/CFB/comments/1bvrn23/acc_vs_fsu_fsus_motion_to_dismiss_or_stay_north/",
+  "https://www.reddit.com/r/CFB/comments/1bvyauk/who_is_one_player_that_was_on_your_team_at_one/",
+  "https://www.reddit.com/r/CFB/comments/1bvnl3a/lodanosky_multiple_sources_have_told_me_that/",
+  "https://www.reddit.com/r/CFB/comments/1bvxwvt/texas_tech_starting_qb_morton_done_for_spring/",
+  "https://www.reddit.com/r/CFB/comments/1bw0363/what_coaching_search_has_you_looking_back/",
+  "https://www.reddit.com/r/CFB/comments/1bvps8g/texas_rb_derrian_brown_has_entered_the_transfer/",
+  "https://www.reddit.com/r/CFB/comments/1bvpv0d/northeast_conference_mercyhurst_officially/",
+  "https://www.reddit.com/r/CFB/comments/1bvt38v/simulating_a_playoff_for_every_single_season_of/"
+)
+
+comments_list <- list()
+# Assuming thread_urls contains your manually collected URLs
+library(RedditExtractoR)
+library(tm)
+library(ggplot2)
+
+# Initialize an empty list to store comments
+comments_list <- list()
+
+for (url in thread_urls) {
+
+  content <- get_thread_content(url)
+  
+ 
+  comments_list <- append(comments_list, list(content$comments))
+}
+
+all_comments <- unlist(comments_list)
+# Remove URLs from all_comments
+all_comments <- gsub("http[s]?://\\S+", "", all_comments)
+
+# Pre-process comments: create a corpus, clean and transform
+corpus <- Corpus(VectorSource(all_comments))
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+dtm <- TermDocumentMatrix(corpus)
+
+# Calculate word frequencies
+word_freqs <- sort(rowSums(as.matrix(dtm)), decreasing = TRUE)
+word_freqs_df <- data.frame(word = names(word_freqs), freq = word_freqs)
+
+top_words <- head(word_freqs_df, 10)
+ggplot(top_words, aes(x = reorder(word, -freq), y = freq)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = NULL, y = "Frequency") +
+  ggtitle("Top Words in r/CFB Posts") +
+  theme_minimal() +
+  coord_flip()
+  
+# Saving top_words
+saveRDS(top_words, "top_words.rds")
+
+# Saving all_comments
+saveRDS(all_comments, "all_comments.rds")
+
+# Saving thread_urls
+saveRDS(thread_urls, "thread_urls.rds")
+
+#Analyze a users commments
+
+library(RedditExtractoR)
+library(tm)  
+library(ggplot2)  
+
+# Replace 'eastexaslion' with the actual Reddit username without 'u/'
+user_comments <- get_user_content("eastexaslion")
+
+
+str(user_comments)
+
+# Extracting the comments data frame correctly from the list
+comments_df <- user_comments$eastexaslion$comments
+
+ library(tm)
+library(wordcloud)
+library(ggplot2)
+
+# Concatenate all comments into a single character vector for analysis
+all_comments <- tolower(paste(comments_df$comment, collapse = " "))
+# Remove URLs from all_comments
+all_comments <- gsub("http[s]?://\\S+", "", all_comments)
+
+# Create a text corpus
+corpus <- Corpus(VectorSource(all_comments))
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+# Create a document-term matrix
+dtm <- TermDocumentMatrix(corpus)
+
+# Calculate word frequencies
+word_freqs <- sort(rowSums(as.matrix(dtm)), decreasing = TRUE)
+word_freqs_df <- data.frame(word = names(word_freqs), freq = word_freqs)
+
+# Visualize the top words
+top_words <- head(word_freqs_df, 10)
+ggplot(top_words, aes(x = reorder(word, -freq), y = freq)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = NULL, y = "Frequency") +
+  ggtitle("Top Words Used by u/eastexaslion in Comments") +
+  theme_minimal() +
+  coord_flip()
+
+ 
